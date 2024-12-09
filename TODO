@@ -1,0 +1,1 @@
+- in reset_joint_pos_by_offset: select asset_cfg.joint_ids and only reset joints for those values

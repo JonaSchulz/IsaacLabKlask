@@ -16,8 +16,8 @@ parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environ
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+parser.add_argument("--num_envs", type=int, default=4, help="Number of environments to simulate.")
+parser.add_argument("--task", type=str, default="Isaac-Klask-v0", help="Name of the task.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -34,6 +34,7 @@ import torch
 
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
+from omni.isaac.lab_tasks.manager_based.klask import KlaskGoalEnvWrapper
 
 
 def main():
@@ -44,6 +45,7 @@ def main():
     )
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
+    #env = KlaskGoalEnvWrapper(env)
 
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")
@@ -55,9 +57,16 @@ def main():
         # run everything in inference mode
         with torch.inference_mode():
             # sample actions from -1 to 1
-            actions = 2 * torch.rand(env.action_space.shape, device=env.unwrapped.device) - 1
+            actions = (2 * torch.rand(env.action_space.shape, device=env.unwrapped.device) - 1)
+            # actions = 0.5 * torch.ones(env.action_space.shape, device=env.unwrapped.device)
             # apply actions
-            env.step(actions)
+            obs, rew, terminated, truncated, info = env.step(actions)
+            if terminated[0] or truncated[0]:
+                klask = env.env.scene.articulations["klask"]
+                print(f"Joint names: {klask.data.joint_names}")
+                print(f"Peg 1 Joint Position: {klask.data.joint_pos}")
+                print(f"Body names: {klask.data.body_names}")
+                print(f"Peg 1 Body Position: {klask.data.body_pos_w[0]}")
 
     # close the simulator
     env.close()
