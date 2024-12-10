@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 import omni.isaac.lab.sim as sim_utils
 from omni.isaac.lab.assets import ArticulationCfg
@@ -25,7 +26,7 @@ KLASK_PARAMS = {
 
 KLASK_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="/home/idsc/Desktop/klask.usd",
+        usd_path=os.path.join(os.getcwd(), "source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets/klask.usd"),
     ),
     actuators={
         "peg_1x_actuator": IdealPDActuatorCfg(
