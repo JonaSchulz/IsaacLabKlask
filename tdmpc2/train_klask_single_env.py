@@ -36,7 +36,7 @@ from omni.isaac.lab_tasks.manager_based.klask import (
 	KlaskSingleEnvWrapper,
     KlaskEnvCfg
 )
-from omni.isaac.lab_tasks.manager_based.classic.cartpole import CartpoleEnvCfg
+#from omni.isaac.lab_tasks.manager_based.classic.cartpole import CartpoleEnvCfg
 
 import os
 os.environ['MUJOCO_GL'] = 'egl'
