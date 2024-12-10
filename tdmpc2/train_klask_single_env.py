@@ -101,8 +101,8 @@ def train(cfg: dict):
 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
 
 	agent = TDMPC2(cfg)
-	if cfg.checkpoint is not None:
-		agent.load(cfg.checkpoint)
+	#if cfg.checkpoint is not None:
+	#	agent.load(cfg.checkpoint)
 	
 	trainer_cls = OfflineTrainer if cfg.multitask else OnlineTrainer
 	trainer = trainer_cls(
