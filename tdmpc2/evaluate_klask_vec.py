@@ -83,12 +83,12 @@ def evaluate(cfg: dict):
 		print(colored('To evaluate a multi-task model, use task=mt80 or task=mt30.', 'red', attrs=['bold']))
 
 	# Make environment
-	#env_cfg = KlaskEnvCfg()
-	env_cfg = CartpoleEnvCfg()
+	env_cfg = KlaskEnvCfg()
+	#env_cfg = CartpoleEnvCfg()
 	env_cfg.scene.num_envs = cfg.num_envs if cfg.num_envs is not None else env_cfg.scene.num_envs
 	env = gym.make(cfg.task, cfg=env_cfg, render_mode='rgb_array' if cfg.save_video else None)
 	env = KlaskTDMPCWrapper(env, cfg.single_player)
-	cfg.obs_shape = {'state': (4,)}
+	cfg.obs_shape = {'state': (12,)}
 	cfg.episode_length = env.unwrapped.max_episode_length
 	cfg.seed_steps = max(1000, 5*cfg.episode_length)
 

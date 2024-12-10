@@ -4,11 +4,12 @@ defaults:
 # environment
 task: 'Isaac-Klask-v0'
 obs: state
-num_envs: 128
+num_envs: 1
 single_player: true
 
 # evaluation
-checkpoint: '/home/idsc/IsaacLab/logs/Isaac-Klask-v0/1/default/models/final.pt'
+#checkpoint: '/home/idsc/IsaacLab/logs/Isaac-Klask-v0/1/default/models/final_klask.pt'
+checkpoint: '/home/idsc/IsaacLabKlask/tdmpc2/models/mt80-48M.pt'
 eval_episodes: 10
 eval_freq: 10
 
@@ -76,7 +77,7 @@ save_agent: true
 seed: 1
 
 # convenience
-work_dir: '/home/idsc/IsaacLab/logs/tdmpc2'
+work_dir: '/home/idsc/IsaacLab/tdmpc2/logs'
 task_title: ???
 multitask: False
 tasks: ???
