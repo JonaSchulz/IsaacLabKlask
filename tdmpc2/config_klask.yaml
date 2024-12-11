@@ -7,10 +7,11 @@ obs: state
 num_envs: 1
 single_player: true
 reward_weights:
-    player_in_goal: -10.0
+    player_in_goal: 0.0
     goal_scored: 10.0
     goal_conceded: -10.0
     distance_player_ball: 0.0
+    distance_ball_opponent_goal: -1.0
     ball_speed: 0.0
 reward_weight_updates:
     player_in_goal: 'constant'
