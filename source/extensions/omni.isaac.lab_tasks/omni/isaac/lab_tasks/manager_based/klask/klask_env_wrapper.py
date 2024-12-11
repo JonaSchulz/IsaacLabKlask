@@ -149,7 +149,7 @@ class KlaskSingleEnvWrapper(Wrapper):
     def __init__(self, env: ManagerBasedRLEnv, single_player=True):
         super().__init__(env)
         self.single_player = single_player
-        assert env.num_envs == 1
+        assert env.unwrapped.num_envs == 1
         if single_player:
             self._action_space = spaces.Box(
                 self.unwrapped.single_action_space.low[:2], 
