@@ -230,13 +230,22 @@ class RewardsCfg:
         weight=KLASK_PARAMS["reward_goal_conceded"]
     )
 
-    proximity_to_ball = RewTerm(
+    distance_player_ball = RewTerm(
         func=distance_player_ball, 
         params={
             "player_cfg": SceneEntityCfg("klask", body_names=["Peg_1"]),
             "ball_cfg": SceneEntityCfg("ball"),
         },
-        weight=KLASK_PARAMS["reward_proximity_to_ball"]
+        weight=KLASK_PARAMS["reward_distance_player_goal"]
+    )
+
+    distance_ball_opponent_goal = RewTerm(
+        func=distance_ball_goal, 
+        params={
+            "ball_cfg": SceneEntityCfg("ball"),
+            "goal": KLASK_PARAMS["opponent_goal"]
+        },
+        weight=KLASK_PARAMS["reward_distance_ball_opponent_goal"]
     )
 
     ball_speed = RewTerm(
@@ -246,6 +255,8 @@ class RewardsCfg:
         },
         weight=KLASK_PARAMS["reward_ball_speed"]
     )
+
+    
 
 
 @configclass

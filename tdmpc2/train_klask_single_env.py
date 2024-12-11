@@ -34,6 +34,7 @@ from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskSimpleEnvWrapper,
     KlaskSb3VecEnvWrapper,
 	KlaskSingleEnvWrapper,
+	CurriculumWrapper,
     KlaskEnvCfg
 )
 #from omni.isaac.lab_tasks.manager_based.classic.cartpole import CartpoleEnvCfg
@@ -94,6 +95,7 @@ def train(cfg: dict):
 	#env_cfg = CartpoleEnvCfg()
 	env_cfg.scene.num_envs = cfg.num_envs if cfg.num_envs is not None else env_cfg.scene.num_envs
 	env = gym.make(cfg.task, cfg=env_cfg, render_mode='rgb_array' if cfg.save_video else None)
+	env = CurriculumWrapper(env, cfg)
 	env = KlaskSingleEnvWrapper(env, single_player=cfg.single_player)
 	env = TensorWrapper(env)
 	cfg.obs_shape = {'state': (12,)}

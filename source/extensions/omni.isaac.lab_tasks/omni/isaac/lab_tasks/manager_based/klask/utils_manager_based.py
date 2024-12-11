@@ -144,3 +144,8 @@ def distance_player_ball(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg, bal
 def speed(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
         vel = root_lin_xy_vel_w(env, asset_cfg)
         return torch.sqrt(vel[:, 0] ** 2 + vel[:, 1] ** 2)
+
+def distance_ball_goal(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg, goal: tuple[float, float, float]) -> torch.Tensor:
+    cx, cy, r = goal
+    ball_pos = root_xy_pos_w(env, ball_cfg)
+    return torch.sqrt((ball_pos[:, 0] - cx) ** 2 + (ball_pos[:, 1] - cy) ** 2)

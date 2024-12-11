@@ -20,7 +20,8 @@ class KlaskGoalEnvWrapper(Wrapper):
         self.goal_conceded_weight = KLASK_PARAMS["reward_goal_conceded"]
         self.goal_scored_weight = KLASK_PARAMS["reward_goal_scored"]
         self.ball_speed_weight = KLASK_PARAMS["reward_ball_speed"]
-        self.proximity_to_ball_weight = KLASK_PARAMS["reward_proximity_to_ball"]
+        self.distance_player_ball_weight = KLASK_PARAMS["reward_distance_player_goal"]
+        self.distance_ball_opponent_goal_weight = KLASK_PARAMS["reward_distance_ball_opponent_goal"]
         self.dt = self.unwrapped.step_dt
         self.single_observation_space = self.unwrapped.single_observation_space
         self.single_action_space = spaces.Box(
@@ -35,9 +36,10 @@ class KlaskGoalEnvWrapper(Wrapper):
         goal_conceded_reward = self.compute_goal_conceded_reward(observation)
         goal_reward = self.compute_goal_reward(achieved_goal, desired_goal)
         ball_speed_reward = self.compute_ball_speed_reward(observation)
-        proximity_to_ball_reward = self.compute_proximity_to_ball_reward(observation)
+        distance_player_ball_reward = self.compute_distance_player_ball_reward(observation)
+        distance_ball_opponent_goal_reward = self.compute_distance_ball_opponent_goal_reward(observation)
         return [self.dt * (goal_reward + player_in_goal_reward + goal_conceded_reward + ball_speed_reward 
-                           + proximity_to_ball_reward)]
+                           + distance_player_ball_reward)]
     
     def compute_goal_reward(self, achieved_goal, desired_goal):
         # TODO: possibly need to unnormalize achieved and desired goal OR don't normalize achieved
@@ -63,8 +65,13 @@ class KlaskGoalEnvWrapper(Wrapper):
     def compute_ball_speed_reward(self, observation):
         return self.ball_speed_weight * np.sqrt((observation[:, 10] ** 2 + observation[:, 11] ** 2))   
 
-    def compute_proximity_to_ball_reward(self, observation):
-        return  self.proximity_to_ball_weight * np.sqrt((observation[:, 0] - observation[:, 8]) ** 2 + (observation[:, 1] - observation[:, 9]) ** 2)
+    def compute_distance_player_ball_reward(self, observation):
+        return  self.distance_player_ball_weight * np.sqrt((observation[:, 0] - observation[:, 8]) ** 2 + (observation[:, 1] - observation[:, 9]) ** 2)
+    
+    def compute_distance_ball_opponent_goal_reward(self, observation):
+        cx, cy, r = KLASK_PARAMS["player_goal"]
+        distance_ball_opponent_goal = torch.sqrt((observation[:, 8] - cx) ** 2 + (observation[:, 9] - cy) ** 2)
+        return self.distance_ball_opponent_goal_weight * distance_ball_opponent_goal
 
 
 class KlaskSimpleEnvWrapper(Wrapper):
@@ -211,4 +218,30 @@ class KlaskTDMPCWrapper(Wrapper):
             else:
                 return obs['policy'].cpu()
         return obs.cpu()
+    
+
+class CurriculumWrapper(Wrapper):
+
+    def __init__(self, env, cfg):
+        self.env = env.unwrapped
+        self.cfg = cfg
+        self._step = 0
+        for term, weight in cfg.reward_weights.items():
+            term_idx = self.env.reward_manager.active_terms.index(term)
+            self.env.reward_manager._term_cfgs[term_idx].weight = weight
+
+    def step(self, actions):
+        self._step += self.env.num_envs
+        for term, update in self.cfg.reward_weight_updates.items():
+            term_idx = self.env.reward_manager.active_terms.index(term)
+            if update =='constant':
+                continue
+            elif update == 'linear_decay':
+                initial_weight = self.cfg.reward_weights[term]
+                weight_step = initial_weight / self.cfg.steps
+                self.env.reward_manager._term_cfgs[term_idx].weight -= weight_step
+            else:
+                raise NotImplementedError
         
+        return self.env.step(actions)
+                  

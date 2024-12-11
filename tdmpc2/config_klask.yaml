@@ -6,15 +6,28 @@ task: 'Isaac-Klask-v0'
 obs: state
 num_envs: 1
 single_player: true
+reward_weights:
+    player_in_goal: -10.0
+    goal_scored: 10.0
+    goal_conceded: -10.0
+    distance_player_ball: 0.0
+    ball_speed: 0.0
+reward_weight_updates:
+    player_in_goal: 'constant'
+    goal_scored: 'constant'
+    goal_conceded: 'constant'
+    distance_player_ball: 'constant'
+    ball_speed: 'constant'
+
 
 # evaluation
-#checkpoint: '/home/idsc/IsaacLab/logs/Isaac-Klask-v0/1/default/models/final_klask.pt'
-checkpoint: '/home/idsc/IsaacLabKlask/tdmpc2/models/mt80-48M.pt'
+checkpoint: '/home/idsc/IsaacLab/logs/Isaac-Klask-v0/1/default/models/final_klask.pt'
+#checkpoint: '/home/idsc/IsaacLabKlask/tdmpc2/models/mt80-48M.pt'
 eval_episodes: 10
 eval_freq: 10
 
 # training
-steps: 1_000_000
+steps: 10_000_000
 batch_size: 256
 reward_coef: 0.1
 value_coef: 0.1
@@ -28,7 +41,7 @@ discount_denom: 5
 discount_min: 0.95
 discount_max: 0.995
 buffer_size: 1_000_000
-exp_name: default
+exp_name: 'test'
 data_dir: ???
 
 # planning
@@ -79,7 +92,7 @@ seed: 1
 # convenience
 work_dir: '/home/idsc/IsaacLab/tdmpc2/logs'
 task_title: ???
-multitask: False
+multitask: ???
 tasks: ???
 obs_shape: ???
 action_dim: 2

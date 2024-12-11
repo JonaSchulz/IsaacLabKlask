@@ -20,7 +20,8 @@ KLASK_PARAMS = {
     "reward_player_in_goal": 0.0,
     "reward_goal_scored": 10.0,
     "reward_goal_conceded": -10.0,
-    "reward_proximity_to_ball": 0.0,
+    "reward_distance_player_goal": 0.0,
+    "reward_distance_ball_opponent_goal": -1.0,
     "reward_ball_speed": 0.0
 }
 

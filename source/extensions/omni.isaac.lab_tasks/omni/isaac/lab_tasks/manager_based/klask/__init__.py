@@ -2,7 +2,7 @@ import gymnasium as gym
 
 from . import agents
 from .klask_env_cfg import KlaskEnvCfg
-from .klask_env_wrapper import KlaskGoalEnvWrapper, KlaskSimpleEnvWrapper, KlaskSb3VecEnvWrapper, KlaskSingleEnvWrapper, KlaskTDMPCWrapper
+from .klask_env_wrapper import *
 from .klask_her import SubtaskHerReplayBuffer
 from .klask_algorithms import TwoPlayerSAC, TwoPlayerPPO
 
