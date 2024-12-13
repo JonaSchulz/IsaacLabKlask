@@ -58,6 +58,8 @@ class OnlineTrainer(Trainer):
 		if reward is None:
 			reward = torch.tensor(float('nan'))
 		if self.cfg.multitask:
+			if action.shape[0] != self.cfg.action_dim:
+				action = torch.cat((action, torch.zeros(self.cfg.action_dim-action.shape[0], dtype=action.dtype, device=action.device)))
 			td = TensorDict(dict(
 				obs=obs,
 				action=action.unsqueeze(0),
