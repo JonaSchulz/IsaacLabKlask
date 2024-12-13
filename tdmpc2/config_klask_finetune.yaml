@@ -23,7 +23,7 @@ reward_weight_updates:
     ball_speed: 'constant'
 
 # evaluation
-checkpoint: '/home/idsc/IsaacLabKlask/tdmpc2/models/mt80-5M.pt'
+checkpoint: '../../../tdmpc2/models/mt80-5M.pt'
 eval_episodes: 5
 eval_freq: 100_000
 
