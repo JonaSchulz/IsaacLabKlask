@@ -1,1 +1,7 @@
-- in reset_joint_pos_by_offset: select asset_cfg.joint_ids and only reset joints for those values
+TDMPC:
+- cfg.num_task_embeddings: 80
+- cfg.task_dim: 96
+- cfg.obs_shape: 223
+- cfg.action_dim: 39
+- cfg.action_dims: [klask.action_dim for _ in range(num_tasks)]
+- cfg.episode_lengths: [klask.episode_length for _ in range(num_tasks)]

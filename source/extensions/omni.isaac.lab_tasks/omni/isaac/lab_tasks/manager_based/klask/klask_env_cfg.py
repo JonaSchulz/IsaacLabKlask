@@ -305,7 +305,7 @@ class KlaskEnvCfg(ManagerBasedRLEnvCfg):
     events = EventCfg()
     rewards = RewardsCfg()
     terminations = TerminationsCfg()
-    episode_length_s = 3.0
+    episode_length_s = 10.0
 
     def __post_init__(self):
         """Post initialization."""

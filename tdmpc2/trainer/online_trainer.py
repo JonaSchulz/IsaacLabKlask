@@ -3,6 +3,7 @@ from time import time
 import numpy as np
 import torch
 from tensordict.tensordict import TensorDict
+
 from trainer.base import Trainer
 
 
@@ -31,8 +32,7 @@ class OnlineTrainer(Trainer):
 			if self.cfg.save_video:
 				self.logger.video.init(self.env, enabled=(i==0))
 			while not done:
-				torch.compiler.cudagraph_mark_step_begin()
-				action = self.agent.act(obs, t0=t==0, eval_mode=True)
+				action = self.agent.act(obs, t0=t==0, eval_mode=True, task=self.cfg.task_idx if self.cfg.multitask else None)
 				obs, reward, done, info = self.env.step(action)
 				ep_reward += reward
 				t += 1
@@ -57,24 +57,29 @@ class OnlineTrainer(Trainer):
 			action = torch.full_like(self.env.rand_act(), float('nan'))
 		if reward is None:
 			reward = torch.tensor(float('nan'))
-		td = TensorDict(
-			obs=obs,
-			action=action.unsqueeze(0),
-			reward=reward.unsqueeze(0),
-		batch_size=(1,))
+		if self.cfg.multitask:
+			td = TensorDict(dict(
+				obs=obs,
+				action=action.unsqueeze(0),
+				reward=reward.unsqueeze(0),
+				task=torch.tensor([self.cfg.task_idx])
+			), batch_size=(1,))
+		else:
+			td = TensorDict(dict(
+				obs=obs,
+				action=action.unsqueeze(0),
+				reward=reward.unsqueeze(0)
+			), batch_size=(1,))
 		return td
 
 	def train(self):
 		"""Train a TD-MPC2 agent."""
-		train_metrics, done, eval_next = {}, True, False
-		last_time = time()
+		train_metrics, done, eval_next = {}, True, True
 		while self._step <= self.cfg.steps:
+
 			# Evaluate agent periodically
 			if self._step % self.cfg.eval_freq == 0:
-				eval_next = False
-			if self._step % 1024 == 0:
-				print(time() - last_time)
-				last_time = time()			
+				eval_next = True
 
 			# Reset environment
 			if done:
@@ -82,7 +87,8 @@ class OnlineTrainer(Trainer):
 					eval_metrics = self.eval()
 					eval_metrics.update(self.common_metrics())
 					self.logger.log(eval_metrics, 'eval')
-					eval_next = True
+					eval_next = False
+					self.logger.save_agent(self.agent, identifier=f'{self._step}')
 
 				if self._step > 0:
 					train_metrics.update(
@@ -98,7 +104,7 @@ class OnlineTrainer(Trainer):
 
 			# Collect experience
 			if self._step > self.cfg.seed_steps:
-				action = self.agent.act(obs, t0=len(self._tds)==1)
+				action = self.agent.act(obs, t0=len(self._tds)==1, task=self.cfg.task_idx if self.cfg.multitask else None)
 			else:
 				action = self.env.rand_act()
 			obs, reward, done, info = self.env.step(action)
@@ -116,5 +122,5 @@ class OnlineTrainer(Trainer):
 				train_metrics.update(_train_metrics)
 
 			self._step += 1
-
+	
 		self.logger.finish(self.agent)

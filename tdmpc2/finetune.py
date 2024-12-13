@@ -46,13 +46,23 @@ def train(cfg: dict):
 	set_seed(cfg.seed)
 	print(colored('Work dir:', 'yellow', attrs=['bold']), cfg.work_dir)
 
-	trainer_cls = OfflineTrainer if cfg.multitask else OnlineTrainer
+	#trainer_cls = OfflineTrainer if cfg.multitask else OnlineTrainer
+	env = make_env(cfg)
+	agent = TDMPC2(cfg)
+	if cfg.checkpoint is not None:
+		agent.load(cfg.checkpoint)
+	buffer = Buffer(cfg)
+	logger = Logger(cfg)
+	cfg.task = "dog-run"
+	env = make_env(cfg)
+	
+	trainer_cls = OnlineTrainer
 	trainer = trainer_cls(
 		cfg=cfg,
-		env=make_env(cfg),
-		agent=TDMPC2(cfg),
-		buffer=Buffer(cfg),
-		logger=Logger(cfg),
+		env=env,
+		agent=agent,
+		buffer=buffer,
+		logger=logger,
 	)
 	trainer.train()
 	print('\nTraining completed successfully')

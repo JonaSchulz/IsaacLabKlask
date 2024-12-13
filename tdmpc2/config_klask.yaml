@@ -2,8 +2,7 @@ defaults:
     - override hydra/launcher: submitit_local
 
 # environment
-task: 'Isaac-Klask-v0'
-obs: state
+task: 'mt30'
 num_envs: 1
 single_player: true
 reward_weights:

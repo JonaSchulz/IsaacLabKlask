@@ -1,20 +1,34 @@
 defaults:
     - override hydra/launcher: submitit_local
 
-finetune: true
-num_task_embeddings: 80
-
 # environment
-task: dog-run
+task: 'Isaac-Klask-v0'
 obs: state
+init_task: 'mw-basketball'
+task_idx: ???
+num_envs: 1
+single_player: true
+reward_weights:
+    player_in_goal: 0.0
+    goal_scored: 10.0
+    goal_conceded: -10.0
+    distance_player_ball: 0.0
+    distance_ball_opponent_goal: -1.0
+    ball_speed: 0.0
+reward_weight_updates:
+    player_in_goal: 'constant'
+    goal_scored: 'constant'
+    goal_conceded: 'constant'
+    distance_player_ball: 'constant'
+    ball_speed: 'constant'
 
 # evaluation
-checkpoint: ???
-eval_episodes: 10
-eval_freq: 50000
+checkpoint: '/home/idsc/IsaacLabKlask/tdmpc2/models/mt80-5M.pt'
+eval_episodes: 5
+eval_freq: 100_000
 
 # training
-steps: 10_000_000
+steps: 1_000_000
 batch_size: 256
 reward_coef: 0.1
 value_coef: 0.1
@@ -28,7 +42,7 @@ discount_denom: 5
 discount_min: 0.95
 discount_max: 0.995
 buffer_size: 1_000_000
-exp_name: default
+exp_name: 'finetune_mt80'
 data_dir: ???
 
 # planning
@@ -65,27 +79,31 @@ dropout: 0.01
 simnorm_dim: 8
 
 # logging
-wandb_project: none
-wandb_entity: none
+wandb_project: 'none'
+wandb_entity: 'none'
 wandb_silent: false
+#enable_wandb: true
 disable_wandb: true
 save_csv: true
 
 # misc
-save_video: true
+save_video: false
 save_agent: true
 seed: 1
 
 # convenience
-work_dir: 'logs'
+work_dir: '/home/idsc/IsaacLab/tdmpc2/logs'
 task_title: ???
-multitask: true
-tasks: [dog-run]
+multitask: ???
+tasks: ???
 obs_shape: ???
-action_dim: 38
+action_dim: 6
 episode_length: ???
 obs_shapes: ???
 action_dims: ???
 episode_lengths: ???
 seed_steps: ???
 bin_size: ???
+
+# speedups
+compile: False
