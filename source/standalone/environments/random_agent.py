@@ -8,6 +8,8 @@
 """Launch Isaac Sim Simulator first."""
 
 import argparse
+import yaml
+from omegaconf import OmegaConf
 
 from omni.isaac.lab.app import AppLauncher
 
@@ -34,7 +36,7 @@ import torch
 
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
-from omni.isaac.lab_tasks.manager_based.klask import KlaskGoalEnvWrapper
+from omni.isaac.lab_tasks.manager_based.klask import KlaskGoalEnvWrapper, CurriculumWrapper
 
 
 def main():
@@ -46,6 +48,8 @@ def main():
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     #env = KlaskGoalEnvWrapper(env)
+    cfg = OmegaConf.load('/home/idsc/IsaacLabKlask/tdmpc2/config_klask_finetune.yaml')
+    env = CurriculumWrapper(env, cfg)
 
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")

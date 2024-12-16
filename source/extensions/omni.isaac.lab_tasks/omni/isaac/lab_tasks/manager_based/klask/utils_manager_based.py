@@ -133,6 +133,11 @@ def body_xy_pos_w(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Te
     return asset.data.body_pos_w[:, asset_cfg.body_ids, :2].squeeze(dim=1) - env.scene.env_origins[:, :2]
 
 
+def body_lin_xy_vel_w(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    return asset.data.body_lin_vel_w[:, asset_cfg.body_ids, :2].squeeze(dim=1)
+
+
 def opponent_goal_obs(env: ManagerBasedRLEnv, goal: tuple[float, float]) -> torch.Tensor:
     return torch.Tensor([*goal, 0.0, 0.0]).repeat(env.num_envs, 1)
 
@@ -141,11 +146,35 @@ def distance_player_ball(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg, bal
     return torch.sqrt(torch.sum((root_xy_pos_w(env, ball_cfg) - body_xy_pos_w(env, player_cfg)) ** 2, dim=1))
 
 
-def speed(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
-        vel = root_lin_xy_vel_w(env, asset_cfg)
-        return torch.sqrt(vel[:, 0] ** 2 + vel[:, 1] ** 2)
+def speed(vel: torch.Tensor) -> torch.Tensor:
+    return torch.sqrt(vel[:, 0] ** 2 + vel[:, 1] ** 2)
+
+
+def ball_speed(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg) -> torch.Tensor:
+    vel = root_lin_xy_vel_w(env, ball_cfg)
+    return speed(vel)
+
+
+def player_speed(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg) -> torch.Tensor:
+    vel = body_lin_xy_vel_w(env, player_cfg)
+    return speed(vel)
+
 
 def distance_ball_goal(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg, goal: tuple[float, float, float]) -> torch.Tensor:
     cx, cy, r = goal
     ball_pos = root_xy_pos_w(env, ball_cfg)
     return torch.sqrt((ball_pos[:, 0] - cx) ** 2 + (ball_pos[:, 1] - cy) ** 2)
+
+
+def distance_player_ball_own_half(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg, ball_cfg: SceneEntityCfg) -> torch.Tensor:
+    ball_pos = root_xy_pos_w(env, ball_cfg)
+    ball_in_own_half = ball_pos[:, 1] < 0.0
+    return ball_in_own_half * distance_player_ball(env, player_cfg, ball_cfg)
+
+
+def ball_stationary(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg, eps=1e-3) -> torch.Tensor:
+    return ball_speed(env, ball_cfg) < eps
+
+
+def collision_player_ball(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg, ball_cfg: SceneEntityCfg, eps=5e-3) -> torch.Tensor:
+    return (distance_player_ball(env, player_cfg, ball_cfg) < eps) * player_speed(env, player_cfg)

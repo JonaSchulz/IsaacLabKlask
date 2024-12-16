@@ -207,7 +207,7 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg("klask", body_names=["Peg_1"]),
             "goal": KLASK_PARAMS["player_goal"]
         },
-        weight=KLASK_PARAMS["reward_player_in_goal"]
+        weight=KLASK_PARAMS["reward_player_in_goal"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     goal_scored = RewTerm(
@@ -217,7 +217,7 @@ class RewardsCfg:
             "goal": KLASK_PARAMS["opponent_goal"],
             "max_ball_vel": KLASK_PARAMS["max_ball_vel"]
         },
-        weight=KLASK_PARAMS["reward_goal_scored"]
+        weight=KLASK_PARAMS["reward_goal_scored"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     goal_conceded = RewTerm(
@@ -227,7 +227,7 @@ class RewardsCfg:
             "goal": KLASK_PARAMS["player_goal"],
             "max_ball_vel": KLASK_PARAMS["max_ball_vel"]
         },
-        weight=KLASK_PARAMS["reward_goal_conceded"]
+        weight=KLASK_PARAMS["reward_goal_conceded"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     distance_player_ball = RewTerm(
@@ -236,7 +236,16 @@ class RewardsCfg:
             "player_cfg": SceneEntityCfg("klask", body_names=["Peg_1"]),
             "ball_cfg": SceneEntityCfg("ball"),
         },
-        weight=KLASK_PARAMS["reward_distance_player_goal"]
+        weight=KLASK_PARAMS["reward_distance_player_goal"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
+    )
+
+    distance_player_ball_own_half = RewTerm(
+        func=distance_player_ball_own_half, 
+        params={
+            "player_cfg": SceneEntityCfg("klask", body_names=["Peg_1"]),
+            "ball_cfg": SceneEntityCfg("ball"),
+        },
+        weight=KLASK_PARAMS["reward_distance_player_goal_own_half"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     distance_ball_opponent_goal = RewTerm(
@@ -245,20 +254,35 @@ class RewardsCfg:
             "ball_cfg": SceneEntityCfg("ball"),
             "goal": KLASK_PARAMS["opponent_goal"]
         },
-        weight=KLASK_PARAMS["reward_distance_ball_opponent_goal"]
+        weight=KLASK_PARAMS["reward_distance_ball_opponent_goal"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     ball_speed = RewTerm(
-        func=speed, 
+        func=ball_speed, 
         params={
-            "asset_cfg": SceneEntityCfg("ball"),
+            "ball_cfg": SceneEntityCfg("ball"),
         },
-        weight=KLASK_PARAMS["reward_ball_speed"]
+        weight=KLASK_PARAMS["reward_ball_speed"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
+    )
+
+    ball_stationary = RewTerm(
+        func=ball_stationary, 
+        params={
+            "ball_cfg": SceneEntityCfg("ball"),
+        },
+        weight=KLASK_PARAMS["reward_ball_stationary"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
+    )
+
+    collision_player_ball = RewTerm(
+        func=collision_player_ball, 
+        params={
+            "player_cfg": SceneEntityCfg("klask", body_names=["Peg_1"]),
+            "ball_cfg": SceneEntityCfg("ball"),
+        },
+        weight=KLASK_PARAMS["reward_collision_player_ball"] * KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
     )
 
     
-
-
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
@@ -313,7 +337,7 @@ class KlaskEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer.eye = (0.0, 0.0, 6.0)
         self.viewer.lookat = (0.0, 0.0, 0.0)
         # step settings
-        self.decimation = 4  # env step every 4 sim steps: 200Hz / 4 = 50Hz
+        self.decimation = KLASK_PARAMS['decimation']  # env step every 4 sim steps: 200Hz / 4 = 50Hz
         # simulation settings
-        self.sim.dt = 0.005  # sim step every 5ms: 200Hz
+        self.sim.dt = KLASK_PARAMS['physics_dt']  # sim step every 5ms: 200Hz
         self.termination_delay = {}

@@ -1,7 +1,1 @@
-TDMPC:
-- cfg.num_task_embeddings: 80
-- cfg.task_dim: 96
-- cfg.obs_shape: 223
-- cfg.action_dim: 39
-- cfg.action_dims: [klask.action_dim for _ in range(num_tasks)]
-- cfg.episode_lengths: [klask.episode_length for _ in range(num_tasks)]
+- replace delayed termination with return of terminal observation in info dict
