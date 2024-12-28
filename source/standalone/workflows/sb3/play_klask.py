@@ -44,6 +44,8 @@ import gymnasium as gym
 import numpy as np
 import os
 import torch
+import matplotlib.pyplot as plt
+import time
 
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import VecNormalize
@@ -57,6 +59,7 @@ from omni.isaac.lab_tasks.utils.wrappers.sb3 import Sb3VecEnvWrapper, process_sb
 from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskGoalEnvWrapper, 
     KlaskSimpleEnvWrapper,
+    KlaskRandomOpponentWrapper,
     KlaskSb3VecEnvWrapper, 
     SubtaskHerReplayBuffer, 
     TwoPlayerPPO,
@@ -118,6 +121,7 @@ def main():
         env = KlaskGoalEnvWrapper(env)
     else:
         env = KlaskSimpleEnvWrapper(env)
+    env = KlaskRandomOpponentWrapper(env)
     env = KlaskSb3VecEnvWrapper(env)
 
     # normalize environment (if needed)
@@ -138,10 +142,12 @@ def main():
     agent = algorithm.load(checkpoint_path, env, print_system_info=True)
 
     # reset environment
+    rewards = []
     obs = env.reset()
     timestep = 0
+    start_time = time.time()
     # simulate environment
-    while simulation_app.is_running():
+    while simulation_app.is_running() and time.time() - start_time < 10.0:
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
@@ -160,7 +166,9 @@ def main():
                 actions = actions_player
             #print(actions_player[0, :])
             # env stepping
-            obs, _, _, _ = env.step(actions)
+            obs, rew, _, _ = env.step(actions)
+            rewards.append(rew)
+
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -169,6 +177,8 @@ def main():
 
     # close the simulator
     env.close()
+    plt.plot(rewards)
+    plt.show()
 
 
 if __name__ == "__main__":

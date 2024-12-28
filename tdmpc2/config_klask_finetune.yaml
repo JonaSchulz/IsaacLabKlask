@@ -30,8 +30,8 @@ reward_weight_updates:
     collision_player_ball: 'constant'
 
 # evaluation
-checkpoint: '../../../tdmpc2/models/mt80-5M.pt'
-#checkpoint: '/home/idsc/IsaacLabKlask/logs/Isaac-Klask-v0/1/finetune_mt80/models/900071.pt'
+#checkpoint: '../../../tdmpc2/models/mt80-5M.pt'
+checkpoint: '/home/idsc/IsaacLabKlask/logs/Isaac-Klask-v0/1/finetune_mt80_more_rewards/models/800014.pt'
 eval_episodes: 5
 eval_freq: 100_000
 

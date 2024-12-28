@@ -1,1 +1,4 @@
+isaacsim omni.isaac.sim.kit
+
 - replace delayed termination with return of terminal observation in info dict
+- possibly use curriculum manager instead of curriculum wrapper

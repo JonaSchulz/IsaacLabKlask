@@ -95,6 +95,16 @@ class KlaskSimpleEnvWrapper(Wrapper):
     def reset(self):
         obs, info = self.env.reset()
         return obs["observation"], info
+    
+
+class KlaskRandomOpponentWrapper(Wrapper):
+    
+    def step(self, actions):
+        actions[:, 2:] = 2 * torch.rand_like(actions)[:, :2] - 1
+        return self.env.step(actions)
+    
+    def reset(self):
+        return self.env.reset()
 
 
 class KlaskSb3VecEnvWrapper(Sb3VecEnvWrapper):
@@ -244,4 +254,37 @@ class CurriculumWrapper(Wrapper):
                 raise NotImplementedError
         
         return self.env.step(actions)
+
+
+class RewardShapingWrapper(Wrapper):
+    def __init__(self, env, potential_function, gamma=0.99):
+        super().__init__(env)
+        self.potential_function = potential_function
+        self.gamma = gamma
+        self.prev_state = None
+
+    def reset(self, **kwargs):
+        # Reset the environment and store the initial state
+        state = self.env.reset(**kwargs)
+        self.prev_state = state
+        return state
+
+    def step(self, action):
+        # Take a step in the environment
+        next_state, original_reward, terminated, truncated, info = self.env.step(action)
+        
+        # Calculate potential-based shaping reward
+        current_potential = self.potential_function(next_state)
+        if self.prev_state is not None:
+            prev_potential = self.potential_function(self.prev_state)
+            shaping_reward = self.gamma * current_potential - prev_potential
+        else:
+            shaping_reward = 0  # No shaping reward for the first step
+
+        # Update the previous state
+        self.prev_state = next_state
+
+        # Combine the original reward with the shaping reward
+        total_reward = original_reward + shaping_reward
+        return next_state, total_reward, terminated, truncated, info    
                   

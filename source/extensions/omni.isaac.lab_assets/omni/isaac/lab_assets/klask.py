@@ -19,16 +19,15 @@ KLASK_PARAMS = {
     "ball_mass_initial": 0.001,
     "ball_mass_dist": (0.001, 0.005),
     "max_ball_vel": 5.0,
-    "reward_player_in_goal": -1.0,
-    "reward_goal_scored": 1.0,
-    "reward_goal_conceded": -1.0,
+    "reward_player_in_goal": 0.0,
+    "reward_goal_scored": 0.0,
+    "reward_goal_conceded": 0.0,
     "reward_distance_player_goal": 0.0,
-    "reward_distance_ball_opponent_goal": 0.0,
+    "reward_distance_ball_opponent_goal": 1.0,
     "reward_ball_speed": 0.0,
-    "reward_distance_player_goal_own_half": -0.05,
-    "reward_distance_ball_opponent_goal": -0.1,
-    "reward_ball_stationary": -0.025,
-    "reward_collision_player_ball": 0.1
+    "reward_distance_player_ball_own_half": 0.0,
+    "reward_ball_stationary": 0.0,
+    "reward_collision_player_ball": 0.0
 }
 
 KLASK_CFG = ArticulationCfg(

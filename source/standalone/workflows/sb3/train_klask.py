@@ -26,6 +26,8 @@ parser.add_argument("--num_envs", type=int, default=None, help="Number of enviro
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
+parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -57,6 +59,7 @@ from stable_baselines3.common.vec_env import VecNormalize
 from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskGoalEnvWrapper, 
     KlaskSimpleEnvWrapper,
+    KlaskRandomOpponentWrapper,
     KlaskSb3VecEnvWrapper, 
     SubtaskHerReplayBuffer, 
     TwoPlayerPPO,
@@ -145,6 +148,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         env = KlaskGoalEnvWrapper(env)
     else:
         env = KlaskSimpleEnvWrapper(env)
+    env = KlaskRandomOpponentWrapper(env)
     env = KlaskSb3VecEnvWrapper(env)
 
     # TODO:
@@ -172,11 +176,17 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     if "opponent_action" in agent_cfg:
         agent_kwargs["opponent_action"] = agent_cfg.pop("opponent_action")
 
-    agent = algorithm(
-        policy_arch, env, verbose=1,
-        **agent_kwargs, 
-        **agent_cfg
-    )
+    if args_cli.checkpoint is None:
+        agent = algorithm(
+            policy_arch, env, verbose=1,
+            **agent_kwargs, 
+            **agent_cfg
+        )
+
+    else:
+        checkpoint_path = args_cli.checkpoint
+        print(f'Loading checkpoint from {checkpoint_path}')
+        agent = algorithm.load(checkpoint_path, env, print_system_info=True)
 
     # configure the logger
     new_logger = configure(log_dir, ["stdout", "tensorboard"])

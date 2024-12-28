@@ -6,6 +6,8 @@ from stable_baselines3 import SAC, HerReplayBuffer
 from stable_baselines3.common.type_aliases import DictReplayBufferSamples
 from stable_baselines3.common.vec_env import VecNormalize
 
+from omni.isaac.lab.envs import ManagerBasedRLEnv
+
 
 class SubtaskHerReplayBuffer(HerReplayBuffer):
 
@@ -77,3 +79,56 @@ class SubtaskHerReplayBuffer(HerReplayBuffer):
             ).reshape(-1, 1),
             rewards=self.to_torch(self._normalize_reward(rewards.reshape(-1, 1), env)),  # type: ignore[attr-defined]
         )
+    
+
+class ManagerBasedRLEnvHER(ManagerBasedRLEnv):
+    
+    def _reset_idx(self, env_ids):
+        """Reset environments based on specified indices.
+
+        Args:
+            env_ids: List of environment ids which must be reset
+        """
+        # Save observations before environment reset
+        self.extras["pre_reset_obs"] = self.observation_manager.compute()
+        
+        # update the curriculum for environments that need a reset
+        self.curriculum_manager.compute(env_ids=env_ids)
+        # reset the internal buffers of the scene elements
+        self.scene.reset(env_ids)
+        # apply events such as randomizations for environments that need a reset
+        if "reset" in self.event_manager.available_modes:
+            env_step_count = self._sim_step_counter // self.cfg.decimation
+            self.event_manager.apply(mode="reset", env_ids=env_ids, global_env_step_count=env_step_count)
+
+        # iterate over all managers and reset them
+        # this returns a dictionary of information which is stored in the extras
+        # note: This is order-sensitive! Certain things need be reset before others.
+        self.extras["log"] = dict()
+        # -- observation manager
+        info = self.observation_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- action manager
+        info = self.action_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- rewards manager
+        info = self.reward_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- curriculum manager
+        info = self.curriculum_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- command manager
+        info = self.command_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- event manager
+        info = self.event_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- termination manager
+        info = self.termination_manager.reset(env_ids)
+        self.extras["log"].update(info)
+        # -- recorder manager
+        info = self.recorder_manager.reset(env_ids)
+        self.extras["log"].update(info)
+
+        # reset the episode length buffer
+        self.episode_length_buf[env_ids] = 0
