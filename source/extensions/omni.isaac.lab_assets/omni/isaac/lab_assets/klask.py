@@ -16,6 +16,8 @@ KLASK_PARAMS = {
     #"player_goal": (0.0, -0.176215, 0.08),
     #"opponent_goal": (0.0, 0.176215, 0.08),
     "ball_restitution": 0.8,
+    "ball_static_friction": 0.3,
+    "ball_dynamic_friction": 0.2,
     "ball_mass_initial": 0.001,
     "ball_mass_dist": (0.001, 0.005),
     "max_ball_vel": 5.0,

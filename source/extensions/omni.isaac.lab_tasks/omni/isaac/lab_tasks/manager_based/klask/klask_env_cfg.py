@@ -38,7 +38,11 @@ class KlaskSceneCfg(InteractiveSceneCfg):
             mass_props=sim_utils.MassPropertiesCfg(mass=KLASK_PARAMS["ball_mass_initial"]),
             collision_props=sim_utils.CollisionPropertiesCfg(collision_enabled=True),
             visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 1.0, 0.0), metallic=0.2),
-            physics_material=sim_utils.RigidBodyMaterialCfg(restitution=KLASK_PARAMS["ball_restitution"])
+            physics_material=sim_utils.RigidBodyMaterialCfg(
+                restitution=KLASK_PARAMS["ball_restitution"],
+                static_friction=KLASK_PARAMS["ball_static_friction"],
+                dynamic_friction=KLASK_PARAMS["ball_dynamic_friction"]
+            )
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
@@ -192,8 +196,8 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("ball"),
-            "pose_range": {"x": (-0.1, 0.1), "y": (-0.18, 0.0)},
-            "velocity_range": {}
+            "pose_range": {"x": (-0.1, 0.1), "y": (-0.16, 0.16)},
+            "velocity_range": {"x": (-1.0, 1.0), "y": (-1.0, 0.0)}
         },
     )
 

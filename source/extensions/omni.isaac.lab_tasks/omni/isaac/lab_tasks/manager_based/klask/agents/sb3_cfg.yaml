@@ -1,6 +1,6 @@
 seed: 42
 
-n_timesteps: !!float 10e6
+n_timesteps: !!float 50e6
 algorithm: 'PPO'
 #policy: 'MultiInputPolicy'
 policy: 'MlpPolicy'
