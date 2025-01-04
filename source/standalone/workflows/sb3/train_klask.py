@@ -27,6 +27,7 @@ parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
+parser.add_argument("--config", type=str, default=None, help="Path to config.yaml.")
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -50,6 +51,7 @@ import numpy as np
 import os
 import random
 from datetime import datetime
+import yaml
 
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import CheckpointCallback
@@ -60,6 +62,7 @@ from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskGoalEnvWrapper, 
     KlaskSimpleEnvWrapper,
     KlaskRandomOpponentWrapper,
+    CurriculumWrapper,
     KlaskSb3VecEnvWrapper, 
     SubtaskHerReplayBuffer, 
     TwoPlayerPPO,
@@ -91,6 +94,11 @@ available_algorithms = {
 @hydra_task_config(args_cli.task, "sb3_cfg_entry_point")
 def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: dict):
     """Train with stable-baselines agent."""
+    if args_cli.config is not None:
+        with open(args_cli.config, "r") as file:
+            data = yaml.safe_load(file)
+            agent_cfg.update(data)
+
     # randomly sample a seed if seed = -1
     if args_cli.seed == -1:
         args_cli.seed = random.randint(0, 10000)
@@ -107,6 +115,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env_cfg.seed = agent_cfg["seed"]
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
 
+    if args_cli.checkpoint is not None:
+        agent_cfg["checkpoint"] = args_cli.checkpoint
+    
     # directory for logging into
     log_dir = os.path.join("logs", "sb3_klask", args_cli.task, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     # dump the configuration into log-directory
@@ -149,6 +160,11 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     else:
         env = KlaskSimpleEnvWrapper(env)
     env = KlaskRandomOpponentWrapper(env)
+    if "rewards" in agent_cfg.keys():
+        rewards_cfg = {"rewards": agent_cfg.pop("rewards"), "n_timesteps": n_timesteps}
+        if "curriculum" in agent_cfg.keys():
+            rewards_cfg["curriculum"] = agent_cfg.pop("curriculum")
+        env = CurriculumWrapper(env, rewards_cfg)
     env = KlaskSb3VecEnvWrapper(env)
 
     # TODO:

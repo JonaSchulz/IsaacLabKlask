@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 import torch
 import gymnasium as gym
-from gymnasium import Wrapper, ActionWrapper, spaces
+from gymnasium import Wrapper, ActionWrapper, ObservationWrapper, spaces
 from collections import OrderedDict
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
@@ -16,12 +16,12 @@ class KlaskGoalEnvWrapper(Wrapper):
     def __init__(self, env):
         super().__init__(env)
         
-        self.player_in_goal_weight = KLASK_PARAMS["reward_player_in_goal"]
-        self.goal_conceded_weight = KLASK_PARAMS["reward_goal_conceded"]
-        self.goal_scored_weight = KLASK_PARAMS["reward_goal_scored"]
-        self.ball_speed_weight = KLASK_PARAMS["reward_ball_speed"]
-        self.distance_player_ball_weight = KLASK_PARAMS["reward_distance_player_goal"]
-        self.distance_ball_opponent_goal_weight = KLASK_PARAMS["reward_distance_ball_opponent_goal"]
+        self.player_in_goal_weight = 1.0
+        self.goal_conceded_weight = 1.0
+        self.goal_scored_weight = 1.0
+        self.ball_speed_weight = 1.0
+        self.distance_player_ball_weight = 1.0
+        self.distance_ball_opponent_goal_weight = 1.0
         self.dt = self.unwrapped.step_dt
         self.single_observation_space = self.unwrapped.single_observation_space
         self.single_action_space = spaces.Box(
@@ -88,23 +88,48 @@ class KlaskSimpleEnvWrapper(Wrapper):
         #    dtype=self.unwrapped.single_action_space.dtype
         #)
     
-    def step(self, actions):
+    def step(self, actions, **kwargs):
         obs, rew, terminated, truncated, info = self.env.step(actions)
         return obs["observation"], rew, terminated, truncated, info
     
-    def reset(self):
+    def reset(self, **kwargs):
         obs, info = self.env.reset()
         return obs["observation"], info
     
 
 class KlaskRandomOpponentWrapper(Wrapper):
     
-    def step(self, actions):
+    def step(self, actions, *args, **kwargs):
         actions[:, 2:] = 2 * torch.rand_like(actions)[:, :2] - 1
-        return self.env.step(actions)
+        return self.env.step(actions, *args, **kwargs)
     
-    def reset(self):
-        return self.env.reset()
+    def reset(self, *args, **kwargs):
+        return self.env.reset(*args, **kwargs)
+    
+
+class OpponentObservationWrapper(ObservationWrapper):
+
+    def observation(self, observation):
+        if isinstance(observation, torch.Tensor):
+            obs_opponent = observation.detach().clone()
+        else:
+            obs_opponent = observation.copy()
+        if type(obs_opponent) is dict:
+            obs_opponent["observation"] *= -1
+            obs_opponent["achieved_goal"] *= -1
+            obs_opponent["observation"][:, :2] = -observation["observation"][:, 2:4]
+            obs_opponent["observation"][:, 2:4] = -observation["observation"][:, :2]
+            obs_opponent["observation"][:, 4:6] = -observation["observation"][:, 6:8]
+            obs_opponent["observation"][:, 6:8] = -observation["observation"][:, 4:6]
+        
+        else:
+            obs_opponent *= -1
+            obs_opponent[:, :2] = -observation[:, 2:4]
+            obs_opponent[:, 2:4] = -observation[:, :2]
+            obs_opponent[:, 4:6] = -observation[:, 6:8]
+            obs_opponent[:, 6:8] = -observation[:, 4:6]
+
+        return {"player": observation, "opponent": obs_opponent}
 
 
 class KlaskSb3VecEnvWrapper(Sb3VecEnvWrapper):
@@ -233,25 +258,26 @@ class KlaskTDMPCWrapper(Wrapper):
 class CurriculumWrapper(Wrapper):
 
     def __init__(self, env, cfg):
-        self.env = env.unwrapped
+        super().__init__(env)
         self.cfg = cfg
         self._step = 0
-        for term, weight in cfg.reward_weights.items():
-            term_idx = self.env.reward_manager.active_terms.index(term)
-            self.env.reward_manager._term_cfgs[term_idx].weight = weight
+        for term, weight in cfg["rewards"].items():
+            term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
+            self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight
 
     def step(self, actions):
-        self._step += self.env.num_envs
-        for term, update in self.cfg.reward_weight_updates.items():
-            term_idx = self.env.reward_manager.active_terms.index(term)
-            if update =='constant':
-                continue
-            elif update == 'linear_decay':
-                initial_weight = self.cfg.reward_weights[term]
-                weight_step = initial_weight / self.cfg.steps
-                self.env.reward_manager._term_cfgs[term_idx].weight -= weight_step
-            else:
-                raise NotImplementedError
+        self._step += self.env.unwrapped.num_envs
+        if "curriculum" in self.cfg.keys():
+            for term, update in self.cfg["curriculum"].items():
+                term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
+                if update =='constant':
+                    continue
+                elif update == 'linear_decay':
+                    initial_weight = self.cfg["rewards"][term]
+                    weight_step = initial_weight / self.cfg["n_timesteps"]
+                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight -= weight_step
+                else:
+                    raise NotImplementedError
         
         return self.env.step(actions)
 

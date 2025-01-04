@@ -26,6 +26,8 @@ parser.add_argument(
     action="store_true",
     help="When no checkpoint provided, use the last saved model. Otherwise use the best saved model.",
 )
+parser.add_argument("--opponent", type=str, default="random", help="Opponent player (random or agent)")
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -57,10 +59,13 @@ from omni.isaac.lab_tasks.utils.parse_cfg import get_checkpoint_path, load_cfg_f
 from omni.isaac.lab_tasks.utils.wrappers.sb3 import Sb3VecEnvWrapper, process_sb3_cfg
 
 from omni.isaac.lab_tasks.manager_based.klask import (
+    KlaskEnvCfg,
     KlaskGoalEnvWrapper, 
     KlaskSimpleEnvWrapper,
     KlaskRandomOpponentWrapper,
+    OpponentObservationWrapper,
     KlaskSb3VecEnvWrapper, 
+    CurriculumWrapper,
     SubtaskHerReplayBuffer, 
     TwoPlayerPPO,
     TwoPlayerSAC
@@ -121,7 +126,12 @@ def main():
         env = KlaskGoalEnvWrapper(env)
     else:
         env = KlaskSimpleEnvWrapper(env)
-    env = KlaskRandomOpponentWrapper(env)
+    if args_cli.opponent == "random":
+        env = KlaskRandomOpponentWrapper(env)
+    elif args_cli.opponent == "agent":
+        env = OpponentObservationWrapper(env)
+    if "rewards" in agent_cfg.keys():
+        env = CurriculumWrapper(env, agent_cfg)
     env = KlaskSb3VecEnvWrapper(env)
 
     # normalize environment (if needed)
@@ -151,19 +161,19 @@ def main():
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
-            actions_player, _ = agent.predict(obs, deterministic=True)
-            if algorithm is TwoPlayerPPO or algorithm is TwoPlayerSAC:
-                obs_opponent = obs.copy()
-                if use_her:
-                    obs_opponent["observation"] *= -1
-                    obs_opponent["achieved_goal"] *= -1
-                else:
-                    obs_opponent *= -1
-                actions_opponent, _ = agent.predict(obs_opponent, deterministic=True)
+            if args_cli.opponent == "agent":
+                # obs_opponent = obs.copy()
+                # if use_her:
+                #     obs_opponent["observation"] *= -1
+                #     obs_opponent["achieved_goal"] *= -1
+                # else:
+                #     obs_opponent *= -1.0
+                actions_player, _ = agent.predict(obs["player"], deterministic=True)
+                actions_opponent, _ = agent.predict(obs["opponent"], deterministic=True)
                 #actions_opponent = agent.get_bootstrap_action(obs_opponent, player="opponent")
-                actions = np.concatenate((actions_player, -1.0 * actions_opponent), axis=-1)
+                actions = np.concatenate((actions_player[:, :2], -1.0 * actions_opponent[:, :2]), axis=-1)
             else:
-                actions = actions_player
+                actions, _ = agent.predict(obs, deterministic=True)
             #print(actions_player[0, :])
             # env stepping
             obs, rew, _, _ = env.step(actions)

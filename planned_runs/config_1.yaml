@@ -1,6 +1,6 @@
 seed: 42
 
-n_timesteps: !!float 50e6
+n_timesteps: !!float 10e6
 algorithm: 'PPO'
 #policy: 'MultiInputPolicy'
 policy: 'MlpPolicy'
@@ -15,8 +15,9 @@ rewards:
   player_in_goal: !!float 0.0
   goal_scored: !!float 0.0
   goal_conceded: !!float 0.0
-  distance_ball_opponent_goal: !!float 1.0
+  distance_ball_opponent_goal: !!float 0.0
   ball_speed: !!float 0.0
-  distance_player_ball_own_half: !!float 0.0
+  distance_player_ball_own_half: !!float 1.0
   ball_stationary: !!float 0.0
+  collision_player_ball: !!float 0.0
 

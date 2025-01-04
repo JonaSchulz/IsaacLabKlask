@@ -143,7 +143,7 @@ def distance_ball_goal(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg, goal: t
 def distance_player_ball_own_half(env: ManagerBasedRLEnv, player_cfg: SceneEntityCfg, ball_cfg: SceneEntityCfg) -> torch.Tensor:
     ball_pos = root_xy_pos_w(env, ball_cfg)
     ball_in_own_half = ball_pos[:, 1] < 0.0
-    return ball_in_own_half * distance_player_ball(env, player_cfg, ball_cfg)
+    return ball_in_own_half * (1.0 - distance_player_ball(env, player_cfg, ball_cfg))
 
 
 def ball_stationary(env: ManagerBasedRLEnv, ball_cfg: SceneEntityCfg, eps=5e-3) -> torch.Tensor:
