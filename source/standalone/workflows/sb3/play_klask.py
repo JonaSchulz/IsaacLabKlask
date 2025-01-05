@@ -131,7 +131,10 @@ def main():
     elif args_cli.opponent == "agent":
         env = OpponentObservationWrapper(env)
     if "rewards" in agent_cfg.keys():
-        env = CurriculumWrapper(env, agent_cfg)
+        rewards_cfg = {"rewards": agent_cfg.pop("rewards"), "n_timesteps": agent_cfg["n_timesteps"]}
+        if "curriculum" in agent_cfg.keys():
+            rewards_cfg["curriculum"] = agent_cfg.pop("curriculum")
+        env = CurriculumWrapper(env, rewards_cfg)
     env = KlaskSb3VecEnvWrapper(env)
 
     # normalize environment (if needed)
@@ -157,7 +160,7 @@ def main():
     timestep = 0
     start_time = time.time()
     # simulate environment
-    while simulation_app.is_running() and time.time() - start_time < 100.0:
+    while simulation_app.is_running() and time.time() - start_time < 6.0:
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
