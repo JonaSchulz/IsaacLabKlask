@@ -1,0 +1,10 @@
+# initial checkpoint: logs/sb3_klask/Isaac-Klask-v0/PPO_distance_ball_goal_goal_scored_conceded_10M/model_9984000_steps.zip
+
+seed: 42
+n_timesteps: 50000000.0
+algorithm: PPO
+policy: MlpPolicy
+her: false
+device: cuda:0
+normalize_input: false
+gamma: 0.99
