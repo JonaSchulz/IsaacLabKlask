@@ -49,7 +49,8 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
-from stable_baselines3 import PPO, SAC
+#from stable_baselines3 import PPO, SAC
+from sbx import PPO, SAC
 from stable_baselines3.common.vec_env import VecNormalize
 
 from omni.isaac.lab.utils.dict import print_dict
@@ -124,8 +125,6 @@ def main():
     # wrap around environment for stable baselines
     if use_her:
         env = KlaskGoalEnvWrapper(env)
-    else:
-        env = KlaskSimpleEnvWrapper(env)
     if args_cli.opponent == "random":
         env = KlaskRandomOpponentWrapper(env)
     elif args_cli.opponent == "agent":
@@ -135,7 +134,10 @@ def main():
         if "curriculum" in agent_cfg.keys():
             rewards_cfg["curriculum"] = agent_cfg.pop("curriculum")
         env = CurriculumWrapper(env, rewards_cfg)
-    env = KlaskSb3VecEnvWrapper(env)
+    if use_her:
+        env = KlaskSb3VecEnvWrapper(env)
+    else:
+        env = Sb3VecEnvWrapper(env)
 
     # normalize environment (if needed)
     if "normalize_input" in agent_cfg:

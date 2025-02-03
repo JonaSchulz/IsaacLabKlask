@@ -28,6 +28,7 @@ parser.add_argument("--seed", type=int, default=None, help="Seed used for the en
 parser.add_argument("--max_iterations", type=int, default=None, help="RL Policy training iterations.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument("--config", type=str, default=None, help="Path to config.yaml.")
+parser.add_argument("--log_dir", type=str, default="sb3_klask", help="Logging directory")
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -53,7 +54,8 @@ import random
 from datetime import datetime
 import yaml
 
-from stable_baselines3 import PPO, SAC
+#from stable_baselines3 import PPO, SAC
+from sbx import PPO, SAC
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import VecNormalize
@@ -119,7 +121,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         agent_cfg["checkpoint"] = args_cli.checkpoint
     
     # directory for logging into
-    log_dir = os.path.join("logs", "sb3_klask", args_cli.task, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    log_dir = os.path.join("logs", args_cli.log_dir, args_cli.task, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     # dump the configuration into log-directory
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
@@ -157,15 +159,18 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     #env = KlaskGoalEnvWrapper(env)
     if use_her:
         env = KlaskGoalEnvWrapper(env)
-    else:
-        env = KlaskSimpleEnvWrapper(env)
+    #else:
+    #    env = KlaskSimpleEnvWrapper(env)
     env = KlaskRandomOpponentWrapper(env)
     if "rewards" in agent_cfg.keys():
         rewards_cfg = {"rewards": agent_cfg.pop("rewards"), "n_timesteps": n_timesteps}
         if "curriculum" in agent_cfg.keys():
             rewards_cfg["curriculum"] = agent_cfg.pop("curriculum")
         env = CurriculumWrapper(env, rewards_cfg)
-    env = KlaskSb3VecEnvWrapper(env)
+    if use_her:
+        env = KlaskSb3VecEnvWrapper(env)
+    else:
+        env = Sb3VecEnvWrapper(env)
 
     # TODO:
     # - which gamma?

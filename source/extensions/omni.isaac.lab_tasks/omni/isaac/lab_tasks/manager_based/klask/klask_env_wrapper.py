@@ -160,7 +160,7 @@ class KlaskSb3VecEnvWrapper(Sb3VecEnvWrapper):
         # obtain gym spaces
         # note: stable-baselines3 does not like when we have unbounded action space so
         #   we set it to some high value here. Maybe this is not general but something to think about.
-        # observation_space = self.unwrapped.single_observation_space
+        #observation_space = self.unwrapped.single_observation_space
         observation_space = self.env.single_observation_space
         action_space = self.env.single_action_space
         if isinstance(action_space, gym.spaces.Box) and not action_space.is_bounded("both"):
