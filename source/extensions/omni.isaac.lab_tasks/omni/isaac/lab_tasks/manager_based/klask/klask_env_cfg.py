@@ -13,6 +13,8 @@ from omni.isaac.lab.managers import RewardTermCfg as RewTerm
 from omni.isaac.lab.managers import TerminationTermCfg as DoneTerm
 from omni.isaac.lab.managers import CurriculumTermCfg as CurriculumTerm
 from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.sim import SimulationCfg, PhysxCfg
+from omni.isaac.lab.sensors import ContactSensorCfg
 
 from omni.isaac.lab_assets.klask import KLASK_CFG, KLASK_PARAMS
 from .utils_manager_based import *
@@ -42,9 +44,16 @@ class KlaskSceneCfg(InteractiveSceneCfg):
                 restitution=KLASK_PARAMS["ball_restitution"],
                 static_friction=KLASK_PARAMS["ball_static_friction"],
                 dynamic_friction=KLASK_PARAMS["ball_dynamic_friction"]
-            )
+            ),
+            activate_contact_sensors=True
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
+    )
+
+    contact_sensor = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Ball",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Klask/Peg_1"],
+        history_length=KLASK_PARAMS["decimation"]
     )
 
     klask = KLASK_CFG.replace(prim_path="{ENV_REGEX_NS}/Klask")
@@ -82,6 +91,43 @@ class ActionsCfg:
 
 @configclass
 class ObservationsCfg:
+    """Observation specifications for the environment."""
+
+     # TODO: noise corruption
+    @configclass
+    class PolicyCfg(ObsGroup):
+        """Observations for policy group."""
+        
+        # observation terms (order preserved)
+        peg_1_pos = ObsTerm(func=body_xy_pos_w, params={"asset_cfg": SceneEntityCfg(
+            name="klask", 
+            body_names=["Peg_1"]
+        )}, )#scale=2/BOARD_WIDTH)
+
+        peg_2_pos = ObsTerm(func=body_xy_pos_w, params={"asset_cfg": SceneEntityCfg(
+            name="klask", 
+            body_names=["Peg_2"],
+        )}, )#scale=2/BOARD_LENGTH)
+
+        joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg": SceneEntityCfg(
+            name="klask", 
+            joint_names=["ground_to_slider_1", "slider_to_peg_1", "ground_to_slider_2", "slider_to_peg_2"]
+        )}, )
+
+        ball_pos_rel = ObsTerm(func=root_xy_pos_w, params={"asset_cfg": SceneEntityCfg(name="ball")})
+        
+        ball_vel_rel = ObsTerm(func=root_lin_xy_vel_w, params={"asset_cfg": SceneEntityCfg(name="ball")})
+
+        def __post_init__(self) -> None:
+            self.enable_corruption = False
+            self.concatenate_terms = True
+
+    # observation groups
+    policy: PolicyCfg = PolicyCfg()
+
+
+@configclass
+class GoalObservationsCfg:
     """Observation specifications for the environment."""
 
      # TODO: noise corruption
@@ -331,10 +377,37 @@ class CurriculumCfg:
 class KlaskEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cartpole environment."""
 
+    sim = SimulationCfg(physx=PhysxCfg(bounce_threshold_velocity=0.0))
     # Scene settings
     scene = KlaskSceneCfg(num_envs=1, env_spacing=1.0)
     # Basic settings
     observations = ObservationsCfg()
+    actions = ActionsCfg()
+    events = EventCfg()
+    rewards = RewardsCfg()
+    terminations = TerminationsCfg()
+    episode_length_s = 5.0
+
+    def __post_init__(self):
+        """Post initialization."""
+        # viewer settings
+        self.viewer.eye = (0.0, 0.0, 6.0)
+        self.viewer.lookat = (0.0, 0.0, 0.0)
+        # step settings
+        self.decimation = KLASK_PARAMS['decimation']  # env step every 4 sim steps: 200Hz / 4 = 50Hz
+        # simulation settings
+        self.sim.dt = KLASK_PARAMS['physics_dt']  # sim step every 5ms: 200Hz
+        
+
+@configclass
+class KlaskGoalEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the cartpole environment."""
+
+    sim = SimulationCfg(physx=PhysxCfg(bounce_threshold_velocity=0.0))
+    # Scene settings
+    scene = KlaskSceneCfg(num_envs=1, env_spacing=1.0)
+    # Basic settings
+    observations = GoalObservationsCfg()
     actions = ActionsCfg()
     events = EventCfg()
     rewards = RewardsCfg()

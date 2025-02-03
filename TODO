@@ -11,3 +11,5 @@ Experiments:
     - collision player ball -> distance ball opponent goal -> + goal scored/conceded
 - opponents: random / self-play current policy / self-play multiple checkpoints
 - resets: only timeout / goal scored/conceded, player in goal, timeout
+
+SAC, self-play

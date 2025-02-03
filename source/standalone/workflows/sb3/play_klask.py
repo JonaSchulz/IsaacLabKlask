@@ -160,7 +160,7 @@ def main():
     timestep = 0
     start_time = time.time()
     # simulate environment
-    while simulation_app.is_running() and time.time() - start_time < 6.0:
+    while simulation_app.is_running() and time.time() - start_time < 100.0:
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping

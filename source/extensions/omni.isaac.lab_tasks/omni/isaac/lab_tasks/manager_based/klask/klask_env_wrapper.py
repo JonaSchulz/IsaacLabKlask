@@ -9,6 +9,7 @@ from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 from omni.isaac.lab_assets.klask import KLASK_PARAMS
 from omni.isaac.lab_tasks.utils.wrappers.sb3 import Sb3VecEnvWrapper, process_sb3_cfg
 from omni.isaac.lab.envs import DirectRLEnv, ManagerBasedRLEnv
+from omni.isaac.lab_tasks.utils.wrappers.rl_games import RlGamesVecEnvWrapper
 
 
 class KlaskGoalEnvWrapper(Wrapper):
@@ -184,7 +185,7 @@ class KlaskSb3VecEnvWrapper(Sb3VecEnvWrapper):
         else:
             raise NotImplementedError(f"Unsupported data type: {type(obs)}")
         return obs
-    
+        
 
 class KlaskSingleEnvWrapper(Wrapper):
 
