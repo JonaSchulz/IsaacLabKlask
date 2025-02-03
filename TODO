@@ -13,3 +13,6 @@ Experiments:
 - resets: only timeout / goal scored/conceded, player in goal, timeout
 
 SAC, self-play
+
+
+sbx: 1562s 16777216

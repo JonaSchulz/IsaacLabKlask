@@ -54,8 +54,8 @@ import random
 from datetime import datetime
 import yaml
 
-#from stable_baselines3 import PPO, SAC
-from sbx import PPO, SAC
+from stable_baselines3 import PPO, SAC
+#from sbx import PPO, SAC
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import VecNormalize
