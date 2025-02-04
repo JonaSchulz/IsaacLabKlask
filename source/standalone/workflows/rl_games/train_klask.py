@@ -52,6 +52,7 @@ import os
 import random
 import yaml
 from datetime import datetime
+import time
 
 from rl_games.common import env_configurations, vecenv
 from rl_games.common.algo_observer import IsaacAlgoObserver
@@ -178,11 +179,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # reset the agent and env
     runner.reset()
+    start_time = time.time()
     # train the agent
     if args_cli.checkpoint is not None:
         runner.run({"train": True, "play": False, "sigma": train_sigma, "checkpoint": resume_path})
     else:
         runner.run({"train": True, "play": False, "sigma": train_sigma})
+    print(f"Total training time: {time.time() - start_time}")
 
     # close the simulator
     env.close()
