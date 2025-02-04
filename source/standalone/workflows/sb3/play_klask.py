@@ -49,8 +49,8 @@ import torch
 import matplotlib.pyplot as plt
 import time
 
-#from stable_baselines3 import PPO, SAC
-from sbx import PPO, SAC
+from stable_baselines3 import PPO, SAC
+#from sbx import PPO, SAC
 from stable_baselines3.common.vec_env import VecNormalize
 
 from omni.isaac.lab.utils.dict import print_dict
