@@ -156,7 +156,6 @@ def main():
     # reset environment
     obs = env.reset()
     rewards = []
-    contact_force = []
     if isinstance(obs, dict):
         obs = obs["obs"]
     timestep = 0
@@ -179,8 +178,6 @@ def main():
             actions = agent.get_action(obs, is_deterministic=True)
             # env stepping
             obs, rew, dones, _ = env.step(actions)
-            #contact_force.append(torch.sum(env.unwrapped.scene["contact_sensor"].data.force_matrix_w ** 2).detach().cpu())
-            contact_force.append(torch.sum(env.unwrapped.scene["contact_sensor"].data.net_forces_w ** 2).detach().cpu())
             rewards.append(rew.detach().cpu())
             # perform operations for terminated episodes
             if len(dones) > 0:
@@ -197,7 +194,6 @@ def main():
     # close the simulator
     env.close()
     plt.plot(rewards, label="Reward")
-    plt.plot(contact_force, label="Contact Force")
     plt.legend()
     plt.show()
 

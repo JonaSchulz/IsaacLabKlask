@@ -50,11 +50,11 @@ class KlaskSceneCfg(InteractiveSceneCfg):
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
 
-    contact_sensor = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Ball",
-        filter_prim_paths_expr=["{ENV_REGEX_NS}/Klask/Peg_1"],
-        history_length=KLASK_PARAMS["decimation"]
-    )
+    #contact_sensor = ContactSensorCfg(
+    #    prim_path="{ENV_REGEX_NS}/Ball",
+    #    filter_prim_paths_expr=["{ENV_REGEX_NS}/Klask/Peg_1"],
+    #    history_length=KLASK_PARAMS["decimation"]
+    #)
 
     klask = KLASK_CFG.replace(prim_path="{ENV_REGEX_NS}/Klask")
 

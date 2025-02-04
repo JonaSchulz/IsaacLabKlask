@@ -1,6 +1,7 @@
 seed: 42
 
-n_timesteps: !!float 50e6
+n_timesteps: !!float 1e6
+n_steps: 16
 algorithm: 'PPO'
 #policy: 'MultiInputPolicy'
 policy: 'MlpPolicy'
@@ -10,6 +11,7 @@ her: false
 device: "cuda:0"
 normalize_input: false
 gamma: 0.99
+batch_size: 4096
 #learning_starts: 10000
 rewards:
   player_in_goal: !!float 0.0

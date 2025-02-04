@@ -63,7 +63,7 @@ params:
     kl_threshold: 0.008
     #score_to_win: 20000
     max_epochs: -1
-    max_frames: 10000000
+    max_frames: 1000000
     save_best_after: 50
     save_frequency: 25
     grad_norm: 1.0
@@ -71,7 +71,7 @@ params:
     truncate_grads: True
     e_clip: 0.2
     horizon_length: 16
-    minibatch_size: 4
+    minibatch_size: 4096
     mini_epochs: 8
     critic_coef: 4
     clip_value: True

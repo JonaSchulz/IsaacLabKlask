@@ -15,5 +15,6 @@ Experiments:
 SAC, self-play
 
 
-sbx: 1562s 16777216
-sb3: 4940s 16777216
+sbx: 22k fps
+sb3: 23k fps
+rl_games: 60k fps
