@@ -155,6 +155,7 @@ def main():
     # create agent from stable baselines
     print(f"Loading checkpoint from: {checkpoint_path}")
     agent = algorithm.load(checkpoint_path, env, print_system_info=True)
+    print(agent.policy)
 
     # reset environment
     rewards = []
