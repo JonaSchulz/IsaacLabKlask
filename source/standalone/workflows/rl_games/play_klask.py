@@ -169,7 +169,7 @@ def main():
     #   attempt to have complete control over environment stepping. However, this removes other
     #   operations such as masking that is used for multi-agent learning by RL-Games.
     start_time = time.time()
-    while simulation_app.is_running() and time.time() - start_time < 10.0:
+    while simulation_app.is_running() and time.time() - start_time < 30.0:
         # run everything in inference mode
         with torch.inference_mode():
             # convert obs to agent format

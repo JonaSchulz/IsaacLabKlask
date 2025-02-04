@@ -242,7 +242,7 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("ball"),
-            "pose_range": {"x": (-0.1, 0.1), "y": (-0.16, 0.16)},
+            "pose_range": {"x": (-0.1, 0.1), "y": (-0.16, 0.0)},
             "velocity_range": {"x": (-1.0, 1.0), "y": (-1.0, 0.0)}
         },
     )
@@ -391,7 +391,7 @@ class KlaskEnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # viewer settings
-        self.viewer.eye = (0.0, 0.0, 6.0)
+        self.viewer.eye = (0.0, 0.0, 2.0)
         self.viewer.lookat = (0.0, 0.0, 0.0)
         # step settings
         self.decimation = KLASK_PARAMS['decimation']  # env step every 4 sim steps: 200Hz / 4 = 50Hz
