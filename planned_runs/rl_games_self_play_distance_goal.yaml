@@ -43,7 +43,7 @@ params:
   load_path: '' # path to the checkpoint to load
 
   config:
-    full_experiment_name: distance_goal
+    full_experiment_name: self_play_distance_goal
     name: klask
     env_name: rlgpu
     device: 'cuda:0'
