@@ -268,7 +268,13 @@ class CurriculumWrapper(Wrapper):
         self._step = 0
         for term, weight in cfg["rewards"].items():
             term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
-            self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
+            if type(weight) is dict:
+                if weight["per_second"]:
+                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight["weight"]
+                else:
+                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight["weight"] / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
+            else:
+                self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
 
     def step(self, actions):
         self._step += self.env.unwrapped.num_envs

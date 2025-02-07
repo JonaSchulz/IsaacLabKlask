@@ -30,7 +30,8 @@ KLASK_PARAMS = {
         "ball_speed": 0.0,
         "distance_player_ball_own_half": 0.0,
         "ball_stationary": 0.0,
-        "collision_player_ball": 0.0
+        "collision_player_ball": 0.0,
+        "ball_in_own_half": 0.0
     },
     "terminations": {
         "goal_scored": False,

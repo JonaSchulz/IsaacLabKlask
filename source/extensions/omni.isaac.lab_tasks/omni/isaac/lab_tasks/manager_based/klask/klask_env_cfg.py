@@ -333,6 +333,14 @@ class RewardsCfg:
         weight=KLASK_PARAMS["rewards"]["collision_player_ball"] / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
     )
 
+    ball_in_own_half = RewTerm(
+        func=ball_in_own_half, 
+        params={
+            "ball_cfg": SceneEntityCfg("ball")
+        },
+        weight=KLASK_PARAMS["rewards"]["ball_in_own_half"]
+    )
+
     
 @configclass
 class TerminationsCfg:
