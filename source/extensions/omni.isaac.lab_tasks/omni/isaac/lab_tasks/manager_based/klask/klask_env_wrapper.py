@@ -365,5 +365,6 @@ class RlGamesGpuEnvSelfPlay(RlGamesGpuEnv):
         return obs, reward, dones, info
     
     def set_weights(self, indices, weigths):
+        print("SETTING WEIGHTS")
         self.agent.set_weights(weigths)
     
