@@ -75,7 +75,8 @@ from omni.isaac.lab_tasks.utils.wrappers.rl_games import RlGamesGpuEnv, RlGamesV
 
 from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskRandomOpponentWrapper,
-    CurriculumWrapper
+    CurriculumWrapper,
+    RlGamesGpuEnvSelfPlay
 )
 
 @hydra_task_config(args_cli.task, "rl_games_cfg_entry_point")
@@ -157,7 +158,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     if isinstance(env.unwrapped, DirectMARLEnv):
         env = multi_agent_to_single_agent(env)
 
-    env = KlaskRandomOpponentWrapper(env)
+    if not agent_cfg["params"]["config"].get("self_play", False):
+        env = KlaskRandomOpponentWrapper(env)
     if "rewards" in agent_cfg.keys():
         env = CurriculumWrapper(env, agent_cfg)
     
@@ -166,10 +168,18 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # register the environment to rl-games registry
     # note: in agents configuration: environment name must be "rlgpu"
-    vecenv.register(
-        "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnv(config_name, num_actors, **kwargs)
-    )
-    env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
+    if agent_cfg["params"]["config"].get("self_play", False):
+        vecenv.register(
+            "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnvSelfPlay(
+                config_name, num_actors, agent_cfg.copy(), **kwargs)
+        )
+        env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
+
+    else:
+        vecenv.register(
+            "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnv(config_name, num_actors, **kwargs)
+        )
+        env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
 
     # set number of actors into agent config
     agent_cfg["params"]["config"]["num_actors"] = env.unwrapped.num_envs

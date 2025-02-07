@@ -1,10 +1,14 @@
 import numpy as np
 from collections import defaultdict
 import torch
+import yaml
+import os
 import gymnasium as gym
 from gymnasium import Wrapper, ActionWrapper, ObservationWrapper, spaces
 from collections import OrderedDict
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
+from rl_games.torch_runner import Runner
+from omni.isaac.lab_tasks.utils.wrappers.rl_games import RlGamesGpuEnv
 
 from omni.isaac.lab_assets.klask import KLASK_PARAMS
 from omni.isaac.lab_tasks.utils.wrappers.sb3 import Sb3VecEnvWrapper, process_sb3_cfg
@@ -315,3 +319,51 @@ class RewardShapingWrapper(Wrapper):
         total_reward = original_reward + shaping_reward
         return next_state, total_reward, terminated, truncated, info    
                   
+
+class RlGamesGpuEnvSelfPlay(RlGamesGpuEnv):
+
+    def __init__(self, config_name, num_actors, config, is_deterministic=False, **kwargs):
+        self.agent = None
+        self.config = config
+        self.is_deterministic = is_deterministic
+        self.sum_rewards = 0
+        super().__init__(config_name, num_actors, **kwargs)
+
+    def get_opponent_obs(self, obs):
+        opponent_obs = opponent_obs = obs.detach().clone()
+        opponent_obs *= -1
+        opponent_obs[:, :2] = -obs[:, 2:4]
+        opponent_obs[:, 2:4] = -obs[:, :2]
+        opponent_obs[:, 4:6] = -obs[:, 6:8]
+        opponent_obs[:, 6:8] = -obs[:, 4:6]
+        opponent_obs[:, 8:] = -obs[:, 8:]
+        return opponent_obs
+    
+    def reset(self):
+        if self.agent == None:
+            self.create_agent()
+        obs = self.env.reset()
+        self.opponent_obs = self.get_opponent_obs(obs)
+        self.sum_rewards = 0
+        return obs
+
+    def create_agent(self):
+        runner = Runner()
+        from rl_games.common.env_configurations import get_env_info
+        self.config['params']['config']['env_info'] = get_env_info(self.env)
+        runner.load(self.config)
+        #os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+        self.agent = runner.create_player()
+        self.agent.has_batch_dimension = True
+
+    def step(self, action, *args, **kwargs):
+        opponent_obs = self.agent.obs_to_torch(self.opponent_obs)
+        opponent_action = self.agent.get_action(opponent_obs, self.is_deterministic)
+        action[:, 2:] = -opponent_action[:, :2]
+        obs, reward, dones, info = self.env.step(action, *args, **kwargs)
+        self.opponent_obs = self.get_opponent_obs(obs)
+        return obs, reward, dones, info
+    
+    def set_weights(self, indices, weigths):
+        self.agent.set_weights(weigths)
+    
