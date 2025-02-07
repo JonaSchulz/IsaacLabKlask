@@ -330,7 +330,7 @@ class RlGamesGpuEnvSelfPlay(RlGamesGpuEnv):
         super().__init__(config_name, num_actors, **kwargs)
 
     def get_opponent_obs(self, obs):
-        opponent_obs = opponent_obs = obs.detach().clone()
+        opponent_obs = obs.detach().clone()
         opponent_obs *= -1
         opponent_obs[:, :2] = -obs[:, 2:4]
         opponent_obs[:, 2:4] = -obs[:, :2]
@@ -367,4 +367,39 @@ class RlGamesGpuEnvSelfPlay(RlGamesGpuEnv):
     def set_weights(self, indices, weigths):
         print("SETTING WEIGHTS")
         self.agent.set_weights(weigths)
+
+
+class KlaskAgentOpponentWrapper(Wrapper):
+    
+    def __init__(self, env, is_deterministic=False):
+        super().__init__(env)
+        self.opponent = None
+        self.is_deterministic = is_deterministic
+
+    def add_opponent(self, opponent):
+        self.opponent = opponent
+        self.opponent.has_batch_dimension = True
+    
+    def get_opponent_obs(self, obs):
+        opponent_obs = obs.detach().clone()
+        opponent_obs *= -1
+        opponent_obs[:, :2] = -obs[:, 2:4]
+        opponent_obs[:, 2:4] = -obs[:, :2]
+        opponent_obs[:, 4:6] = -obs[:, 6:8]
+        opponent_obs[:, 6:8] = -obs[:, 4:6]
+        opponent_obs[:, 8:] = -obs[:, 8:]
+        return opponent_obs
+
+    def reset(self, *args, **kwargs):
+        obs, info = self.env.reset(*args, **kwargs)
+        self.opponent_obs = self.get_opponent_obs(obs["policy"])
+        return obs, info
+    
+    def step(self, action, *args, **kwargs):
+        opponent_obs = self.opponent.obs_to_torch(self.opponent_obs)
+        opponent_action = self.opponent.get_action(opponent_obs, self.is_deterministic)
+        action[:, 2:] = -opponent_action[:, :2]
+        obs, reward, terminated, truncated, info = self.env.step(action, *args, **kwargs)
+        self.opponent_obs = self.get_opponent_obs(obs["policy"])
+        return obs, reward, terminated, truncated, info
     

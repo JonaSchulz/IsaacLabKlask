@@ -65,7 +65,9 @@ from omni.isaac.lab_tasks.utils.wrappers.rl_games import RlGamesGpuEnv, RlGamesV
 
 from omni.isaac.lab_tasks.manager_based.klask import (
     KlaskRandomOpponentWrapper,
-    CurriculumWrapper
+    CurriculumWrapper,
+    RlGamesGpuEnvSelfPlay,
+    KlaskAgentOpponentWrapper
 )
 
 def main():
@@ -124,7 +126,10 @@ def main():
     if isinstance(env.unwrapped, DirectMARLEnv):
         env = multi_agent_to_single_agent(env)
 
-    env = KlaskRandomOpponentWrapper(env)
+    if agent_cfg["params"]["config"].get("self_play", False):
+        env = KlaskAgentOpponentWrapper(env)
+    else:
+        env = KlaskRandomOpponentWrapper(env)
     if "rewards" in agent_cfg.keys():
         env = CurriculumWrapper(env, agent_cfg)
     
@@ -133,10 +138,18 @@ def main():
 
     # register the environment to rl-games registry
     # note: in agents configuration: environment name must be "rlgpu"
-    vecenv.register(
-        "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnv(config_name, num_actors, **kwargs)
-    )
-    env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
+    if agent_cfg["params"]["config"].get("self_play", False):
+        vecenv.register(
+            "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnvSelfPlay(
+                config_name, num_actors, agent_cfg.copy(), **kwargs)
+        )
+        env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
+
+    else:
+        vecenv.register(
+            "IsaacRlgWrapper", lambda config_name, num_actors, **kwargs: RlGamesGpuEnv(config_name, num_actors, **kwargs)
+        )
+        env_configurations.register("rlgpu", {"vecenv_type": "IsaacRlgWrapper", "env_creator": lambda **kwargs: env})
 
     # load previously trained model
     agent_cfg["params"]["load_checkpoint"] = True
@@ -164,12 +177,27 @@ def main():
     # initialize RNN states if used
     if agent.is_rnn:
         agent.init_rnn()
+
+    if agent_cfg["params"]["config"].get("self_play", False):
+        
+        def find_wrapper(env, wrapper_type):
+            """Recursively searches for a wrapper of a given type."""
+            while not isinstance(env, wrapper_type):
+                env = env.env  # Move to the next layer
+            if isinstance(env, wrapper_type):
+                    return env  # Found the wrapper
+            return None  # Wrapper not found
+        
+        opponent = runner.create_player()
+        opponent.set_weights(agent.get_weights())
+        find_wrapper(env, KlaskAgentOpponentWrapper).add_opponent(opponent)
+
     # simulate environment
     # note: We simplified the logic in rl-games player.py (:func:`BasePlayer.run()`) function in an
     #   attempt to have complete control over environment stepping. However, this removes other
     #   operations such as masking that is used for multi-agent learning by RL-Games.
     start_time = time.time()
-    while simulation_app.is_running() and time.time() - start_time < 30.0:
+    while simulation_app.is_running() and time.time() - start_time < 100.0:
         # run everything in inference mode
         with torch.inference_mode():
             # convert obs to agent format
