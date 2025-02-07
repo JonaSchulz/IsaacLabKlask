@@ -43,7 +43,7 @@ params:
   load_path: '' # path to the checkpoint to load
 
   config:
-    full_experiment_name: self_play_sparse
+    full_experiment_name: self_play_sparse_horizon128
     name: klask
     env_name: rlgpu
     device: 'cuda:0'
@@ -64,7 +64,7 @@ params:
     kl_threshold: 0.008
     #score_to_win: 20000
     max_epochs: -1
-    max_frames: 200000000
+    max_frames: 100000000
     save_best_after: 50
     save_frequency: 25
     grad_norm: 1.0
