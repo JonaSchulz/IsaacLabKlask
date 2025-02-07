@@ -43,7 +43,7 @@ params:
   load_path: '' # path to the checkpoint to load
 
   config:
-    full_experiment_name: self_play_sparse
+    full_experiment_name: sparse_horizon256
     name: klask
     env_name: rlgpu
     device: 'cuda:0'
@@ -71,17 +71,17 @@ params:
     entropy_coef: 0.0
     truncate_grads: True
     e_clip: 0.2
-    horizon_length: 16
+    horizon_length: 256
     minibatch_size: 4096
     mini_epochs: 8
     critic_coef: 4
     clip_value: True
     seq_length: 4
     bounds_loss_coef: 0.0001
-    self_play: True
-    self_play_config:
-      update_score: 2.0
-      games_to_check: 1
+    self_play: False
+    #self_play_config:
+      #update_score: -5.0
+      #games_to_check: 1
       #env_update_num: 4096
 
 rewards:
