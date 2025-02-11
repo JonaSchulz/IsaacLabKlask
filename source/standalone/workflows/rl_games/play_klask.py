@@ -131,7 +131,7 @@ def main():
     else:
         env = KlaskRandomOpponentWrapper(env)
     if "rewards" in agent_cfg.keys():
-        env = CurriculumWrapper(env, agent_cfg)
+        env = CurriculumWrapper(env, agent_cfg["rewards"], mode="test")
     
     # wrap around environment for rl-games
     env = RlGamesVecEnvWrapper(env, rl_device, clip_obs, clip_actions)

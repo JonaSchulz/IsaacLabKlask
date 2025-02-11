@@ -43,7 +43,7 @@ params:
   load_path: '' # path to the checkpoint to load
 
   config:
-    full_experiment_name: collision_new
+    full_experiment_name: collision_new_delayedPD
     name: klask
     env_name: rlgpu
     device: 'cuda:0'

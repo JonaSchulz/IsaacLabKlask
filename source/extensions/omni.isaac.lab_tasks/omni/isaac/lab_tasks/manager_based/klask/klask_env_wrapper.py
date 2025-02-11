@@ -262,33 +262,35 @@ class KlaskTDMPCWrapper(Wrapper):
 
 class CurriculumWrapper(Wrapper):
 
-    def __init__(self, env, cfg):
+    def __init__(self, env, cfg, num_steps=None, mode="train"):
         super().__init__(env)
         self.cfg = cfg
+        self.num_steps = num_steps
+        self.mode = mode
         self._step = 0
-        for term, weight in cfg["rewards"].items():
+        for term, weight in cfg.items():
             term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
             if type(weight) is dict:
-                if weight["per_second"]:
-                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight["weight"]
+                if type(weight["weight"]) is list:
+                    _weight = weight["weight"][0]
                 else:
-                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight["weight"] / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
+                    _weight = weight["weight"]
+                if not weight.get("per_second", False):
+                    _weight /= KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
             else:
-                self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = weight / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
+                _weight = weight / (KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"])
+            self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight = _weight
 
     def step(self, actions):
-        self._step += self.env.unwrapped.num_envs
-        if "curriculum" in self.cfg.keys():
-            for term, update in self.cfg["curriculum"].items():
-                term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
-                if update =='constant':
-                    continue
-                elif update == 'linear_decay':
-                    initial_weight = self.cfg["rewards"][term]
-                    weight_step = initial_weight / self.cfg["n_timesteps"]
-                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight -= weight_step
-                else:
-                    raise NotImplementedError
+        if self.mode == "train":
+            self._step += self.env.unwrapped.num_envs
+            for term, weight in self.cfg.items():
+                if type(weight) is dict and type(weight["weight"]) is list:
+                    term_idx = self.env.unwrapped.reward_manager.active_terms.index(term)
+                    weight_step = (weight["weight"][1] - weight["weight"][0]) / self.num_steps
+                    if not weight.get("per_second", False):
+                        weight_step /= KLASK_PARAMS["decimation"] * KLASK_PARAMS["physics_dt"]
+                    self.env.unwrapped.reward_manager._term_cfgs[term_idx].weight += weight_step
         
         return self.env.step(actions)
 

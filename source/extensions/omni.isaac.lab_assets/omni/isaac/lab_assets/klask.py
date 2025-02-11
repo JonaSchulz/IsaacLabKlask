@@ -3,7 +3,7 @@ import os
 
 import omni.isaac.lab.sim as sim_utils
 from omni.isaac.lab.assets import ArticulationCfg
-from omni.isaac.lab.actuators import ImplicitActuatorCfg, IdealPDActuatorCfg
+from omni.isaac.lab.actuators import ImplicitActuatorCfg, IdealPDActuatorCfg, DelayedPDActuatorCfg
 
 
 # Configuration for Klask articulation
@@ -45,33 +45,41 @@ KLASK_CFG = ArticulationCfg(
         usd_path=os.path.join(os.getcwd(), "source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets/klask.usd"),
     ),
     actuators={
-        "peg_1x_actuator": IdealPDActuatorCfg(
+        "peg_1x_actuator": DelayedPDActuatorCfg(
             joint_names_expr=["slider_to_peg_1"],
             stiffness=0.0,
             damping=10.0,
             velocity_limit=1.0,
-            effort_limit=1.0
+            effort_limit=1.0,
+            min_delay=int(0.2/KLASK_PARAMS["physics_dt"]),
+            max_delay=int(0.2/KLASK_PARAMS["physics_dt"])
         ),
-        "peg_1y_actuator": IdealPDActuatorCfg(
+        "peg_1y_actuator": DelayedPDActuatorCfg(
             joint_names_expr=["ground_to_slider_1"],
             stiffness=0.0,
             damping=10.0,
             velocity_limit=1.0,
-            effort_limit=1.0
+            effort_limit=1.0,
+            min_delay=int(0.2/KLASK_PARAMS["physics_dt"]),
+            max_delay=int(0.2/KLASK_PARAMS["physics_dt"])
         ),
-        "peg_2x_actuator": IdealPDActuatorCfg(
+        "peg_2x_actuator": DelayedPDActuatorCfg(
             joint_names_expr=["slider_to_peg_2"],
             stiffness=0.0,
             damping=10.0,
             velocity_limit=1.0,
-            effort_limit=1.0
+            effort_limit=1.0,
+            min_delay=int(0.2/KLASK_PARAMS["physics_dt"]),
+            max_delay=int(0.2/KLASK_PARAMS["physics_dt"])
         ),
-        "peg_2y_actuator": IdealPDActuatorCfg(
+        "peg_2y_actuator": DelayedPDActuatorCfg(
             joint_names_expr=["ground_to_slider_2"],
             stiffness=0.0,
             damping=10.0,
             velocity_limit=1.0,
-            effort_limit=1.0
+            effort_limit=1.0,
+            min_delay=int(0.2/KLASK_PARAMS["physics_dt"]),
+            max_delay=int(0.2/KLASK_PARAMS["physics_dt"])
         ),        
     },
 )
